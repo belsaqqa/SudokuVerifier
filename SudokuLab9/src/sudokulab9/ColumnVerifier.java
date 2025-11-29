@@ -6,25 +6,16 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-public class ColumnVerifier implements Runnable {
-    private final int[][] board;
-    private final List<ValidationError> sharedErrors;
+public class ColumnVerifier implements ValidationStrategy {
     private final NumberValidator numberValidator;
     
-    public ColumnVerifier(int[][] board, List<ValidationError> sharedErrors, NumberValidator numberValidator) {
-        this.board = board;
-        this.sharedErrors = sharedErrors;
+    public ColumnVerifier(NumberValidator numberValidator) {
+       
         this.numberValidator = numberValidator;
     }
     
     @Override
-    public void run() {
-        for (int col = 0; col < 9; col++) {
-            validateSingleColumn(col);
-        }
-    }
-    
-    private void validateSingleColumn(int col) {
+    public ValidationError validate(int board [][], int col) { // col is index in uml, changed it because it's easier to make sense of it
         Set<Integer> numbers = new HashSet<>();
         Set<Integer> duplicateValues = new HashSet<>();
         Set<Integer> duplicatePositions = new HashSet<>();
@@ -35,7 +26,7 @@ public class ColumnVerifier implements Runnable {
             
             if (value < 1 || value > 9) {
                 continue;
-            }
+            } // should be validated in csvreader??
             
             if (!numbers.add(value)) {
                 duplicateValues.add(value);
@@ -45,20 +36,21 @@ public class ColumnVerifier implements Runnable {
         
         // Find missing numbers
         Set<Integer> missingNumbers = numberValidator.findMissingNumbers(numbers);
+         boolean hasError = !duplicateValues.isEmpty() || !missingNumbers.isEmpty();
+
+        if(!hasError){
+            return null; // as there is no error
+        }
         
-        // Create error if needed
-        if (!duplicateValues.isEmpty() || !missingNumbers.isEmpty()) {
-            ValidationError error = new ValidationError(
-                "COL", 
-                col, 
-                duplicateValues, 
-                duplicatePositions, 
-                missingNumbers
+        return new ValidationError(
+                "COL",
+                 col,
+                 duplicateValues,
+                 duplicatePositions,
+                 missingNumbers
             );
+        
             
-            synchronized(sharedErrors) {
-                sharedErrors.add(error);
-            }
+            
         }
     }
-}
