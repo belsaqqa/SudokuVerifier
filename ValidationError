@@ -1,0 +1,47 @@
+package sudoku;
+
+import java.util.*;
+
+public class ValidationError {
+    private final String type;                      
+    private final int index;                        
+    private final Set<Integer> duplicateValues;     
+    private final Set<Integer> duplicatePositions;  
+    private final Set<Integer> missingNumbers;      
+    
+    public ValidationError(String type, int index, 
+                          Set<Integer> duplicateValues, 
+                          Set<Integer> duplicatePositions,
+                          Set<Integer> missingNumbers) {
+        this.type = type;
+        this.index = index;
+        this.duplicateValues = Set.copyOf(duplicateValues);
+        this.duplicatePositions = Set.copyOf(duplicatePositions);
+        this.missingNumbers = Set.copyOf(missingNumbers);
+    }
+    
+    public String getType() { return type; }
+    public int getIndex() { return index; }
+    public Set<Integer> getDuplicateValues() { return duplicateValues; }
+    public Set<Integer> getDuplicatePositions() { return duplicatePositions; }
+    public Set<Integer> getMissingNumbers() { return missingNumbers; }
+    
+    public boolean hasErrors() {
+        return !duplicateValues.isEmpty() || !missingNumbers.isEmpty();
+    }
+    
+    @Override
+    public String toString() {
+        StringBuilder sb = new StringBuilder();
+        if (!duplicateValues.isEmpty()) {
+            int firstDuplicate = duplicateValues.iterator().next();
+            sb.append(String.format("  %s %d, #%d, %s", 
+                type, index + 1, firstDuplicate, duplicatePositions));
+        }
+        if (!missingNumbers.isEmpty()) {
+            if (sb.length() > 0) sb.append(" | ");
+            sb.append(String.format("Missing: %s", missingNumbers));
+        }
+        return sb.toString();
+    }
+}
