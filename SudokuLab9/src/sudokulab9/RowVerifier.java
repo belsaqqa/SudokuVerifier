@@ -7,26 +7,17 @@ import java.util.Map;
 import java.util.Set;
 import java.util.*;
 
-public class RowVerifier implements Runnable {
+public class RowVerifier implements ValidationStrategy {
 
-    private final int[][] board;
-    private final List<ValidationError> sharedErrors;
     private final NumberValidator numberValidator;
 
-    public RowVerifier(int[][] board, List<ValidationError> sharedErrors, NumberValidator numberValidator) {
-        this.board = board;
-        this.sharedErrors = sharedErrors;
+    public RowVerifier(NumberValidator numberValidator) {
+
         this.numberValidator = numberValidator;
     }
 
     @Override
-    public void run() {
-        for (int row = 0; row < 9; row++) {
-            validateSingleRow(row);
-        }
-    }
-
-    private void validateSingleRow(int row) {
+    public ValidationError validate(int board[][], int row) {
         Set<Integer> numbers = new HashSet<>();
         Set<Integer> duplicateValues = new HashSet<>();
         Set<Integer> duplicatePositions = new HashSet<>();
@@ -35,7 +26,7 @@ public class RowVerifier implements Runnable {
         for (int col = 0; col < 9; col++) {
             int value = board[row][col];
 
-            // Check if value is in valid range
+            // Check if value is in valid range (should probabaly remove this)
             if (value < 1 || value > 9) {
                 // This should be handled by CSV reader
                 continue;
@@ -44,26 +35,27 @@ public class RowVerifier implements Runnable {
             // Check for duplicates
             if (!numbers.add(value)) {
                 duplicateValues.add(value);
-                duplicatePositions.add(col + 1); // 1-based position
+                duplicatePositions.add(col + 1);
             }
         }
 
         // Find missing numbers
         Set<Integer> missingNumbers = numberValidator.findMissingNumbers(numbers);
+        
+        boolean hasError = !duplicateValues.isEmpty() || !missingNumbers.isEmpty();
 
-        // If there are any errors, create ValidationError and add to shared list
-        if (!duplicateValues.isEmpty() || !missingNumbers.isEmpty()) {
-            ValidationError error = new ValidationError(
-                    "ROW",
-                    row,
-                    duplicateValues,
-                    duplicatePositions,
-                    missingNumbers
+        if(!hasError){
+            return null; // as there is no error
+        }
+        
+        return new ValidationError(
+                "ROW",
+                 row,
+                 duplicateValues,
+                 duplicatePositions,
+                 missingNumbers
             );
 
-            synchronized (sharedErrors) {
-                sharedErrors.add(error);
-            }
         }
+
     }
-}
