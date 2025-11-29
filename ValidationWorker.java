@@ -1,29 +1,31 @@
 package sudoku;
 
-import java.util.*;
+import java.util.List;
 import java.util.concurrent.Callable;
 
-public class ValidationWorker implements Callable<List<ValidationError>> {
+public class ValidationWorker implements Callable<Void> {
     private ValidationStrategy validator;
     private int index;
     private int[][] board;
+    private List<ValidationError> errorCollection;
     
-    public ValidationWorker(ValidationStrategy validator, int index, int[][] board) {
+    public ValidationWorker(ValidationStrategy validator, int index, int[][] board, List<ValidationError> errorCollection) {
         this.validator = validator;
         this.index = index;
         this.board = board;
+        this.errorCollection = errorCollection;
     }
     
     @Override
-    public List<ValidationError> call() {
+    public Void call() {
         // Call the validator (returns null if no errors)
         ValidationError error = validator.validate(board, index);
         
-        //Checking if there are errors
-        List<ValidationError> errors = new ArrayList<>();
+        // If error exists, add to shared collection
         if (error != null && error.hasErrors()) {
-            errors.add(error);
+            errorCollection.add(error);
         }
-        return errors;
+        
+        return null; // We're using Void, so return null
     }
 }
