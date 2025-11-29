@@ -7,51 +7,58 @@ import java.util.Map;
 import java.util.Set;
 
 public class ColumnVerifier implements Runnable {
-
-    private final SudokuBoard board;                    // final for thread safety
+    private final int[][] board;
     private final List<ValidationError> sharedErrors;
+    private final NumberValidator numberValidator;
     
-     public ColumnVerifier(SudokuBoard board, List<ValidationError> sharedErrors){
+    public ColumnVerifier(int[][] board, List<ValidationError> sharedErrors, NumberValidator numberValidator) {
         this.board = board;
         this.sharedErrors = sharedErrors;
+        this.numberValidator = numberValidator;
     }
     
-
     @Override
     public void run() {
-        for (int col = 0; col < 9; col++) {  // sending each column to get validated
+        for (int col = 0; col < 9; col++) {
             validateSingleColumn(col);
         }
     }
     
     private void validateSingleColumn(int col) {
-        Map<Integer, Set<Integer>> valuePositions = new HashMap<>(); 
-        //digit itself, a set of row numbers of where it is duplicated
+        Set<Integer> numbers = new HashSet<>();
+        Set<Integer> duplicateValues = new HashSet<>();
+        Set<Integer> duplicatePositions = new HashSet<>();
         
+        // Check for duplicates and collect all numbers
         for (int row = 0; row < 9; row++) {
-            int value = board.getCell(row, col);
-            valuePositions.putIfAbsent(value, new HashSet<>());// if the value encountered is already in hashmap dont addit if it is not add it and create a hashset to store its duplicates
-            valuePositions.get(value).add(row);
-        }
-
-        for (int row = 0; row < 9; row++) {
-            int value = board.getCell(row, col);
+            int value = board[row][col];
             
             if (value < 1 || value > 9) {
-                synchronized(sharedErrors) {
-                    sharedErrors.add(new ValidationError());  // assuming it stores an error 
-                }
                 continue;
             }
             
-            if (valuePositions.get(value).size() > 1) {
-                synchronized(sharedErrors) {
-                    sharedErrors.add(new ValidationError());// storing the error useing the validationerror class
-                }
-                break;
+            if (!numbers.add(value)) {
+                duplicateValues.add(value);
+                duplicatePositions.add(row + 1); // 1-based position
             }
         }
-    
-
+        
+        // Find missing numbers
+        Set<Integer> missingNumbers = numberValidator.findMissingNumbers(numbers);
+        
+        // Create error if needed
+        if (!duplicateValues.isEmpty() || !missingNumbers.isEmpty()) {
+            ValidationError error = new ValidationError(
+                "COL", 
+                col, 
+                duplicateValues, 
+                duplicatePositions, 
+                missingNumbers
+            );
+            
+            synchronized(sharedErrors) {
+                sharedErrors.add(error);
+            }
+        }
     }
 }
