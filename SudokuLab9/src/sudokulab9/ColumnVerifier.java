@@ -14,43 +14,43 @@ public class ColumnVerifier implements ValidationStrategy {
         this.numberValidator = numberValidator;
     }
     
+    
+    
     @Override
-    public ValidationError validate(int board [][], int col) { // col is index in uml, changed it because it's easier to make sense of it
-        Set<Integer> numbers = new HashSet<>();
-        Set<Integer> duplicateValues = new HashSet<>();
-        Set<Integer> duplicatePositions = new HashSet<>();
-        
-        // Check for duplicates and collect all numbers
-        for (int row = 0; row < 9; row++) {
-            int value = board[row][col];
-            
-            if (value < 1 || value > 9) {
-                continue;
-            } // should be validated in csvreader??
-            
-            if (!numbers.add(value)) {
-                duplicateValues.add(value);
-                duplicatePositions.add(row + 1); // 1-based position
-            }
-        }
-        
-        // Find missing numbers
-        Set<Integer> missingNumbers = numberValidator.findMissingNumbers(numbers);
-         boolean hasError = !duplicateValues.isEmpty() || !missingNumbers.isEmpty();
+public ValidationError validate(int board[][], int col) {
+    Map<Integer, Set<Integer>> valueToPositions = new HashMap<>();
+    Set<Integer> allNumbers = new HashSet<>();
 
-        if(!hasError){
-            return null; // as there is no error
-        }
-        
-        return new ValidationError(
-                "COL",
-                 col,
-                 duplicateValues,
-                 duplicatePositions,
-                 missingNumbers
-            );
-        
-            
-            
+    // Collect all positions for each value
+    for (int row = 0; row < 9; row++) {
+        int value = board[row][col];
+
+        if (value >= 1 && value <= 9) {
+            valueToPositions.computeIfAbsent(value, k -> new HashSet<>()).add(row);
+            allNumbers.add(value);
         }
     }
+
+    // Find missing numbers
+    Set<Integer> missingNumbers = numberValidator.findMissingNumbers(allNumbers);
+    
+    // Only return error if there are actual issues
+    if (valueToPositions.values().stream().noneMatch(positions -> positions.size() > 1) 
+        && missingNumbers.isEmpty()) {
+        return null;
+    }
+    
+    return new ValidationError(
+        "COL",
+        col,
+        valueToPositions,
+        missingNumbers
+    );
+}
+    
+    
+    
+    
+           
+        }
+    
