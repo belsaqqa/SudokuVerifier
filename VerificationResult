@@ -1,0 +1,29 @@
+package sudoku;
+
+import java.util.*;
+
+public class VerificationResult {
+    private final boolean valid;
+    private final List<ValidationError> errors;
+    
+    public VerificationResult(boolean valid, List<ValidationError> errors) {
+        this.valid = valid;
+        this.errors = List.copyOf(errors);
+    }
+    
+    public boolean isValid() { return valid; }
+    public List<ValidationError> getErrors() { return errors; }
+    
+    @Override
+    public String toString() {
+        if (valid) {
+            return "VALID";
+        } else {
+            StringBuilder sb = new StringBuilder("INVALID\n");
+            for (ValidationError error : errors) {
+                sb.append(error.toString()).append("\n");
+            }
+            return sb.toString();
+        }
+    }
+}
