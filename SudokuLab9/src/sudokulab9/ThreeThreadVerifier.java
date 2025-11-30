@@ -1,5 +1,5 @@
 
-package sudokulab9;
+package sudoku;
 
 import java.util.*;
 import java.util.concurrent.ExecutorService;
