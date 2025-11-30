@@ -16,11 +16,10 @@ public class VerifierFactory {
             case 0:
                 return new SequentialVerifier(numberValidator);
             case 3:
-                // Will be implemented by Member 2
-                throw new UnsupportedOperationException("3-thread mode not yet implemented");
+                return new ThreeThreadVerifier(numberValidator);
             case 27:
-                // Will be implemented by Member 3  
-                throw new UnsupportedOperationException("27-thread mode not yet implemented");
+                
+                return new TwentySevenThreadVerifier(numberValidator);
             default:
                 throw new IllegalArgumentException("Invalid mode: " + mode);
         }
