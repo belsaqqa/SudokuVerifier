@@ -1,4 +1,4 @@
-package sudokulab9;
+package sudoku;
 
 import java.util.HashMap;
 import java.util.HashSet;
