@@ -1,11 +1,6 @@
-package sudokulab9;
 
-import java.util.HashMap;
 import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
 import java.util.Set;
-import java.util.*;
 
 public class BoxVerifier implements ValidationStrategy {
 
@@ -18,14 +13,25 @@ public class BoxVerifier implements ValidationStrategy {
 
     @Override
     public ValidationError validate(int board[][], int index) {
+        //validate boxIndex range first
+        
+        if (index < 0 || index >= 9) {
+            throw new IllegalArgumentException("Box index must be between 0 and 8, got: "+ index);
+        }
+        
         Set<Integer> numbers = new HashSet<>();
         Set<Integer> duplicateValues = new HashSet<>();
         Set<Integer> duplicatePositions = new HashSet<>();
 
         // Calculate box coordinates (3x3 grid) for 1-based box number
-        int boxIndex = index - 1;  // Convert to 0-based for calculations
-        int startRow = (boxIndex / 3) * 3;  // 0, 0, 0, 3, 3, 3, 6, 6, 6
-        int startCol = (boxIndex % 3) * 3;  // 0, 3, 6, 0, 3, 6, 0, 3, 6
+        
+        int startRow = (index / 3) * 3;  
+        int startCol = (index % 3) * 3;
+        
+        // Validate bounds
+        if (startRow < 0 || startRow >= 9 || startCol < 0 || startCol >= 9) {
+            throw new IllegalArgumentException("Invalid box coordinates for index " + index +": startRow=" + startRow + ", startCol=" + startCol);
+        }
 
         // Check all 9 cells in the 3x3 box
         for (int i = 0; i < 3; i++) {
@@ -52,10 +58,6 @@ public class BoxVerifier implements ValidationStrategy {
 
         // Find missing numbers
         Set<Integer> missingNumbers = numberValidator.findMissingNumbers(numbers);
-
-        if (duplicateValues.isEmpty() && missingNumbers.isEmpty()) {
-            return null;
-        }
 
         return new ValidationError(
                 "BOX",
