@@ -1,3 +1,4 @@
+
 package sudoku;
 
 import java.util.List;
@@ -18,14 +19,23 @@ public class ValidationWorker implements Callable<Void> {
     
     @Override
     public Void call() {
-        // Call the validator (returns null if no errors)
-        ValidationError error = validator.validate(board, index);
-        
-        // If error exists, add to shared collection
-        if (error != null && error.hasErrors()) {
-            errorCollection.add(error);
+        try {
+            // Call the validator (returns null if no errors)
+            ValidationError error = validator.validate(board, index);
+            
+            // If error exists, add to shared collection
+            if (error != null) {
+                errorCollection.add(error);
+            }
+        } catch (Exception e) {
+            System.err.println("Validation error in worker: " + e.getMessage());
         }
         
-        return null; // We're using Void, so return null
+        return null;
     }
 }
+
+
+
+
+
