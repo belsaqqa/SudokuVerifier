@@ -1,0 +1,161 @@
+
+import java.io.BufferedReader;
+import java.io.FileReader;
+import java.io.IOException;
+
+public class CSVReader {
+    // Private constructor to prevent instantiation
+    private CSVReader() {}
+    
+    public static int[][] readBoard(String filename) {
+        if (filename == null || filename.trim().isEmpty()) {
+            throw new IllegalArgumentException("Filename cannot be null or empty");
+        }
+        
+        int[][] board = new int[9][9];
+        int rowCount = 0;
+        
+        try (BufferedReader br = new BufferedReader(new FileReader(filename))) {
+            String line;
+            
+            while ((line = br.readLine()) != null && rowCount < 9) {
+                // Skip empty lines
+                if (line.trim().isEmpty()) {
+                    continue;
+                }
+                
+                // Parse CSV line
+                String[] values = parseCSVLine(line);
+                
+                if (values.length != 9) {
+                    throw new IllegalArgumentException(
+                        String.format("Invalid number of columns in row %d. Expected 9, got %d. Line: %s", 
+                            rowCount + 1, values.length, line));
+                }
+                
+                // Convert values to integers
+                for (int col = 0; col < 9; col++) {
+                    board[rowCount][col] = parseSudokuValue(values[col], rowCount, col);
+                }
+                
+                rowCount++;
+            }
+            
+            // Validate we got exactly 9 rows
+            if (rowCount != 9) {
+                throw new IllegalArgumentException(
+                    String.format("Invalid number of rows. Expected 9, got %d", rowCount));
+            }
+            
+        } catch (IOException e) {
+            throw new RuntimeException("Failed to read CSV file: " + filename, e);
+        }
+        
+        return board;
+    }
+    
+    private static String[] parseCSVLine(String line) {
+        // Remove any surrounding quotes from the entire line if present
+        line = line.trim();
+        if (line.startsWith("\"") && line.endsWith("\"")) {
+            line = line.substring(1, line.length() - 1);
+        }
+        
+        // Split by commas, but be careful with quoted commas
+        String[] values = line.split(",");
+        
+        // Trim each value and handle quoted individual values
+        for (int i = 0; i < values.length; i++) {
+            values[i] = values[i].trim();
+            if (values[i].startsWith("\"") && values[i].endsWith("\"")) {
+                values[i] = values[i].substring(1, values[i].length() - 1);
+            }
+        }
+        
+        return values;
+    }
+    
+    private static int parseSudokuValue(String value, int row, int col) {
+        if (value == null || value.trim().isEmpty()) {
+            throw new IllegalArgumentException(
+                String.format("Empty value at position [%d][%d]", row, col));
+        }
+        
+        try {
+            int number = Integer.parseInt(value.trim());
+            
+            // Validate Sudoku range (1-9)
+            if (number < 1 || number > 9) {
+                throw new IllegalArgumentException(
+                    String.format("Invalid value '%s' at position [%d][%d]. Must be between 1-9", 
+                        value, row, col));
+            }
+            
+            return number;
+            
+        } catch (NumberFormatException e) {
+            throw new IllegalArgumentException(
+                String.format("Invalid number format '%s' at position [%d][%d]. Must be integer 1-9", 
+                    value, row, col), e);
+        }
+    }
+    
+    public static boolean isValidSudokuCSV(String filename) {
+        try {
+            int[][] board = readBoard(filename);
+            return isBoardStructureValid(board);
+        } catch (Exception e) {
+            return false;
+        }
+    }
+    
+    private static boolean isBoardStructureValid(int[][] board) {
+        if (board == null || board.length != 9) {
+            return false;
+        }
+        
+        for (int[] row : board) {
+            if (row == null || row.length != 9) {
+                return false;
+            }
+            for (int value : row) {
+                if (value < 1 || value > 9) {
+                    return false;
+                }
+            }
+        }
+        
+        return true;
+    }
+    
+    public static void printBoard(int[][] board) {
+        if (board == null) {
+            System.out.println("Board is null");
+            return;
+        }
+        
+        System.out.println("Sudoku Board:");
+        for (int i = 0; i < 9; i++) {
+            if (board[i] == null) {
+                System.out.println("Row " + i + ": null");
+                continue;
+            }
+            
+            for (int j = 0; j < 9; j++) {
+                System.out.print(board[i][j]);
+                if (j < 8) {
+                    System.out.print(" ");
+                }
+                // Add box separators for visual clarity
+                if (j == 2 || j == 5) {
+                    System.out.print("| ");
+                }
+            }
+            System.out.println();
+            // Add horizontal separators
+            if (i == 2 || i == 5) {
+                System.out.println("------+-------+------");
+            }
+        }
+    }
+}
