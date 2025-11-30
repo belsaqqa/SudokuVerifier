@@ -1,4 +1,4 @@
-
+package sudokulab9;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -45,8 +45,8 @@ public class BoxVerifier implements ValidationStrategy {
                     continue;
                 }
 
-                // calculate position within box (1-9)
-                int positionInBox = (i * 3) + j + 1; // 1-based position
+                // calculate position within box 0-8
+                int positionInBox = (i * 3) + j;
 
                 // Check for duplicates
                 if (!numbers.add(value)) {
@@ -59,9 +59,14 @@ public class BoxVerifier implements ValidationStrategy {
         // Find missing numbers
         Set<Integer> missingNumbers = numberValidator.findMissingNumbers(numbers);
 
+        if (duplicateValues.isEmpty() && missingNumbers.isEmpty()) {
+            return null; // better error handling
+        }
+
+
         return new ValidationError(
                 "BOX",
-                index, // 1-based box number (1-9) not zero
+                index, 
                 duplicateValues,
                 duplicatePositions,
                 missingNumbers
