@@ -16,7 +16,7 @@ public class CompleteSetValidator implements NumberValidator {
     
     @Override
     public boolean isValidSet(Set<Integer> numbers) {
-        // ✅ CORRECT: A valid Sudoku set must have ALL numbers 1-9
+        // CORRECT: A valid Sudoku set must have ALL numbers 1-9
         // This means no duplicates AND no missing numbers
         return numbers.size() == 9 && COMPLETE_SET.containsAll(numbers);
     }
