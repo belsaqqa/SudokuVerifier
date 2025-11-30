@@ -18,44 +18,34 @@ public class RowVerifier implements ValidationStrategy {
 
     @Override
     public ValidationError validate(int board[][], int row) {
-        Set<Integer> numbers = new HashSet<>();
-        Set<Integer> duplicateValues = new HashSet<>();
-        Set<Integer> duplicatePositions = new HashSet<>();
+        Map<Integer, Set<Integer>> valueToPositions = new HashMap<>();
+        Set<Integer> allNumbers = new HashSet<>();
 
-        // First pass: Check for duplicates and collect all numbers
+        // Collect all positions for each value
         for (int col = 0; col < 9; col++) {
             int value = board[row][col];
 
-            // Check if value is in valid range (should probabaly remove this)
-            if (value < 1 || value > 9) {
-                // This should be handled by CSV reader
-                continue;
-            }
-
-            // Check for duplicates
-            if (!numbers.add(value)) {
-                duplicateValues.add(value);
-                duplicatePositions.add(col + 1);
+            if (value >= 1 && value <= 9) {
+                valueToPositions.computeIfAbsent(value, k -> new HashSet<>()).add(col);
+                allNumbers.add(value);
             }
         }
 
         // Find missing numbers
-        Set<Integer> missingNumbers = numberValidator.findMissingNumbers(numbers);
-        
-        boolean hasError = !duplicateValues.isEmpty() || !missingNumbers.isEmpty();
+        Set<Integer> missingNumbers = numberValidator.findMissingNumbers(allNumbers);
 
-        if(!hasError){
-            return null; // as there is no error
+        // Only return error if there are actual issues
+        if (valueToPositions.values().stream().noneMatch(positions -> positions.size() > 1)
+                && missingNumbers.isEmpty()) {
+            return null;
         }
-        
+
         return new ValidationError(
                 "ROW",
-                 row,
-                 duplicateValues,
-                 duplicatePositions,
-                 missingNumbers
-            );
-
-        }
-
+                row,
+                valueToPositions,
+                missingNumbers
+        );
     }
+
+}
