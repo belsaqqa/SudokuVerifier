@@ -1,47 +1,63 @@
 package sudoku;
 
 import java.util.*;
+import java.util.stream.Collectors;
+
+
+
 
 public class ValidationError {
-    private final String type;                      
-    private final int index;                        
-    private final Set<Integer> duplicateValues;     
-    private final Set<Integer> duplicatePositions;  
-    private final Set<Integer> missingNumbers;      
-    
+    private final String type;
+    private final int index;
+    private final Map<Integer, Set<Integer>> valueToPositions; // Value -> Positions map
+    private final Set<Integer> missingNumbers;
+
     public ValidationError(String type, int index, 
-                          Set<Integer> duplicateValues, 
-                          Set<Integer> duplicatePositions,
-                          Set<Integer> missingNumbers) {
+                         Map<Integer, Set<Integer>> valueToPositions,
+                         Set<Integer> missingNumbers) {
         this.type = type;
         this.index = index;
-        this.duplicateValues = Set.copyOf(duplicateValues);
-        this.duplicatePositions = Set.copyOf(duplicatePositions);
-        this.missingNumbers = Set.copyOf(missingNumbers);
+        this.valueToPositions = valueToPositions;
+        this.missingNumbers = missingNumbers;
     }
-    
-    public String getType() { return type; }
-    public int getIndex() { return index; }
-    public Set<Integer> getDuplicateValues() { return duplicateValues; }
-    public Set<Integer> getDuplicatePositions() { return duplicatePositions; }
-    public Set<Integer> getMissingNumbers() { return missingNumbers; }
-    
-    public boolean hasErrors() {
-        return !duplicateValues.isEmpty() || !missingNumbers.isEmpty();
+
+    // Keep old constructor for compatibility
+    public ValidationError(String type, int index,
+                         Set<Integer> duplicateValues,
+                         Set<Integer> duplicatePositions,
+                         Set<Integer> missingNumbers) {
+        this.type = type;
+        this.index = index;
+        this.missingNumbers = missingNumbers;
+        this.valueToPositions = new HashMap<>();
+        
     }
-    
-    @Override
+
+
     public String toString() {
-        StringBuilder sb = new StringBuilder();
-        if (!duplicateValues.isEmpty()) {
-            int firstDuplicate = duplicateValues.iterator().next();
-            sb.append(String.format("  %s %d, #%d, %s", 
-                type, index + 1, firstDuplicate, duplicatePositions));
+    StringBuilder sb = new StringBuilder();
+    
+    for (Map.Entry<Integer, Set<Integer>> entry : valueToPositions.entrySet()) {
+        if (entry.getValue().size() > 1) {
+            // Convert 0-based positions to 1-based for display
+            Set<Integer> displayPositions = entry.getValue().stream()
+                .map(pos -> pos + 1)
+                .collect(Collectors.toSet());
+                
+            sb.append(String.format("  %s %d, #%d, positions=%s\n",
+                type, index + 1, entry.getKey(), displayPositions));
         }
+    }
+    
+    
+        
+        // Print missing numbers
         if (!missingNumbers.isEmpty()) {
-            if (sb.length() > 0) sb.append(" | ");
-            sb.append(String.format("Missing: %s", missingNumbers));
+            sb.append(String.format("  %s %d, Missing: %s\n", 
+                    type, index + 1, missingNumbers));
         }
-        return sb.toString();
+        
+        return sb.toString().trim(); // Remove trailing newline
     }
 }
+
