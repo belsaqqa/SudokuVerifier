@@ -1,0 +1,10 @@
+package sudoku;
+
+import java.util.*;
+
+public interface NumberValidator {
+    
+    Set<Integer> findMissingNumbers( Set<Integer> presentNumbers );
+    boolean isValidSet( Set<Integer> numbers );
+    
+}

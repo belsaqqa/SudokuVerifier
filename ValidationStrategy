@@ -1,0 +1,7 @@
+package sudoku;
+
+public interface ValidationStrategy {
+    
+    ValidationError validate(int[][] board, int index);
+    
+}
