@@ -89,7 +89,7 @@ public class ThreeThreadVerifier implements VerifierStrategy {
     
     public List<ValidationError> validateBoxes(int[][] board){
         List<ValidationError> errors = new ArrayList<>();
-        for (int i = 0; i < 9; i++) {
+        for (int i = 1; i < 9; i++) {
             ValidationError error = boxValidator.validate(board, i);
             if (error != null) {
                 errors.add(error);
