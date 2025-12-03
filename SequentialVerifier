@@ -1,0 +1,34 @@
+package sudoku;
+
+import java.util.*;
+
+public class SequentialVerifier implements VerifierStrategy {
+    
+    private final List<ValidationStrategy> validationStrategies;
+    
+    public SequentialVerifier(NumberValidator numberValidator) {
+        this.validationStrategies = Arrays.asList(
+            new RowVerifier(numberValidator),
+            new ColumnVerifier(numberValidator),
+            new BoxVerifier(numberValidator)
+        );
+    }
+    
+    @Override
+    public VerificationResult verify(int[][] board) {
+        List<ValidationError> allErrors = new ArrayList<>();
+        
+        // Validate using all strategies
+        for (ValidationStrategy strategy : validationStrategies) {
+            for (int i = 0; i < 9; i++) {
+                ValidationError error = strategy.validate(board, i);
+                if (error != null) {  
+                    allErrors.add(error);
+                }
+            }
+        }
+        
+        boolean isValid = allErrors.isEmpty();
+        return new VerificationResult(isValid, allErrors);
+    }
+}
