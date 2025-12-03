@@ -1,36 +1,100 @@
 package sudoku;
 
-import java.io.IOException;
+import java.io.File;
+import java.util.Scanner;
 
 public class SudokuVerifier {
     public static void main(String[] args) {
-        if (args.length != 2) {
-            System.err.println("Usage: java SudokuVerifier <csv-file> <mode>");
-            System.err.println("Modes: 0 (sequential), 3 (3-thread), 27 (27-thread)");
-            System.exit(1);
+        System.out.println("SUDOKU VERIFIER TEST");
+        
+        // Use your specific file path and filename
+        String filePath = "/Users/Jolie/NetBeansProjects/sudoku/sudoku.csv";
+        
+        // Let user choose the mode
+        int mode = getModeFromUser();
+        
+        testBoardFromFile(filePath, mode);
+    }
+    
+    private static int getModeFromUser() {
+        Scanner scanner = new Scanner(System.in);
+        int mode = 0;
+        
+        while (true) {
+            System.out.println("\nChoose verification mode:");
+            System.out.println("0 - Sequential (1 thread)");
+            System.out.println("3 - Parallel (3 threads)");
+            System.out.println("27 - Highly Parallel (27 threads)");
+            System.out.print("Enter mode (0, 3, or 27): ");
+            
+            try {
+                mode = scanner.nextInt();
+                if (mode == 0 || mode == 3 || mode == 27) {
+                    break;
+                } else {
+                    System.out.println("Invalid mode. Please enter 0, 3, or 27.");
+                }
+            } catch (Exception e) {
+                System.out.println("Invalid input. Please enter a number.");
+                scanner.nextLine(); // Clear the invalid input
+            }
         }
         
-        String csvFile = args[0];
-        int mode = Integer.parseInt(args[1]);
+        return mode;
+    }
+    
+    private static void testBoardFromFile(String filename, int mode) {
+        System.out.println("\nTESTING WITH MODE: " + mode);
+        System.out.println("File: " + filename);
+        
+        File file = new File(filename);
+        if (!file.exists()) {
+            System.out.println("ERROR: CSV file not found: " + filename);
+            return;
+        }
         
         try {
-            // Read board from CSV
-            SudokuBoard board = SudokuBoard.fromCSV(csvFile);
+            // Read board from CSV file
+            int[][] board = CSVReader.readBoard(filename);
             
-            // Create appropriate verifier
-            VerifierFactory factory = new VerifierFactory();
+            System.out.println("Board loaded successfully");
+            CSVReader.printBoard(board);
+            
+            // Test verification with chosen mode
+            testVerification(board, mode);
+            
+        } catch (Exception e) {
+            System.out.println("Error: " + e.getMessage());
+        }
+    }
+    
+    private static void testVerification(int[][] board, int mode) {
+        try {
+            VerifierFactory factory = new VerifierFactory(new CompleteSetValidator());
             VerifierStrategy verifier = factory.createVerifier(mode);
             
-            // Verify and print result
-            VerificationResult result = verifier.verify(board.getGrid());
-            System.out.println(result.toString());
+            System.out.println("\nVerifying...");
+            long startTime = System.currentTimeMillis();
             
-        } catch (IOException e) {
-            System.err.println("Error reading file: " + e.getMessage());
-            System.exit(1);
+            VerificationResult result = verifier.verify(board);
+            
+            long endTime = System.currentTimeMillis();
+            long duration = endTime - startTime;
+            
+            System.out.println("Result: " + (result.isValid() ? "VALID" : "INVALID"));
+            System.out.println("Time taken: " + duration + " ms");
+            
+            if (!result.isValid()) {
+                System.out.println("Errors found: " + result.getErrors().size());
+                for (ValidationError error : result.getErrors()) {
+                    System.out.println(error.toString());
+                }
+            }
+            
+        } catch (UnsupportedOperationException e) {
+            System.out.println("Mode " + mode + " is not implemented yet: " + e.getMessage());
         } catch (Exception e) {
-            System.err.println("Error: " + e.getMessage());
-            System.exit(1);
+            System.out.println("Verification error: " + e.getMessage());
         }
     }
 }
