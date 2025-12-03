@@ -1,4 +1,3 @@
-
 package sudoku;
 
 import java.util.*;
@@ -12,14 +11,12 @@ public class ThreeThreadVerifier implements VerifierStrategy {
     private final ValidationStrategy rowValidator;
     private final ValidationStrategy colValidator;
     private final ValidationStrategy boxValidator;
-    //private final ExecutorService executor;
     
     public ThreeThreadVerifier(NumberValidator numberValidator) {
         this.numberValidator = numberValidator;
         this.boxValidator = new BoxVerifier(numberValidator);
         this.colValidator = new ColumnVerifier(numberValidator);
         this.rowValidator = new RowVerifier(numberValidator);
-        //this.executor = Executors.newFixedThreadPool(3);
     }
     
     @Override
@@ -44,28 +41,25 @@ public class ThreeThreadVerifier implements VerifierStrategy {
         colThread.start();
         boxThread.start();
         
-        try{
+        try {
             rowThread.join();
             colThread.join();
             boxThread.join();
-        }catch(InterruptedException e){
+        } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
-            throw new RuntimeException("thread exection interrupted", e);
+            throw new RuntimeException("Thread execution interrupted", e);
         }
         
-        List <ValidationError> allErrors = new ArrayList();
+        List<ValidationError> allErrors = new ArrayList<>();
         allErrors.addAll(rowErrors);
         allErrors.addAll(colErrors);
         allErrors.addAll(boxErrors);
         
-        
         boolean isValid = allErrors.isEmpty();
         return new VerificationResult(isValid, allErrors);
-        
-       
     }
     
-    public List<ValidationError> validateRows(int[][] board){
+    public List<ValidationError> validateRows(int[][] board) {
         List<ValidationError> errors = new ArrayList<>();
         for (int i = 0; i < 9; i++) {
             ValidationError error = rowValidator.validate(board, i);
@@ -76,7 +70,7 @@ public class ThreeThreadVerifier implements VerifierStrategy {
         return errors;
     }
     
-    public List<ValidationError> validateColumns(int[][] board){
+    public List<ValidationError> validateColumns(int[][] board) {
         List<ValidationError> errors = new ArrayList<>();
         for (int i = 0; i < 9; i++) {
             ValidationError error = colValidator.validate(board, i);
@@ -87,7 +81,7 @@ public class ThreeThreadVerifier implements VerifierStrategy {
         return errors;
     }
     
-    public List<ValidationError> validateBoxes(int[][] board){
+    public List<ValidationError> validateBoxes(int[][] board) {
         List<ValidationError> errors = new ArrayList<>();
         for (int i = 0; i < 9; i++) {
             ValidationError error = boxValidator.validate(board, i);
@@ -96,7 +90,5 @@ public class ThreeThreadVerifier implements VerifierStrategy {
             }
         }
         return errors;
-    
     }
-    
 }
